@@ -1,8 +1,8 @@
-package br.com.addressapi.bdd;
+package br.com.addressapi.bdd.integration;
 
 import br.com.addressapi.Application;
 import br.com.addressapi.entities.Address;
-import br.com.addressapi.entities.BusinessError;
+import br.com.addressapi.entities.ApiError;
 import br.com.addressapi.gateways.AddressGateway;
 import cucumber.api.java.Before;
 import cucumber.api.java.en.Given;
@@ -14,6 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationContextLoader;
 import org.springframework.boot.test.TestRestTemplate;
 import org.springframework.boot.test.WebIntegrationTest;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
@@ -33,7 +35,7 @@ public class ZipCodeSearchSteps {
     RestTemplate restTemplate = new TestRestTemplate();
 
     private ResponseEntity<Address> result;
-    private ResponseEntity<BusinessError> resultError;
+    private ResponseEntity<Collection<ApiError>> resultError;
 
     @Autowired
     private AddressGateway addressGateway;
@@ -46,15 +48,26 @@ public class ZipCodeSearchSteps {
         }
     }
 
+    @Given("^there is a valid \"(.*?)\" zip code for street \"(.*?)\"$")
+    public void there_is_a_valid_zip_code(String zipCode, String street) throws Throwable {
+        setupData(zipCode, street);
+    }
+
+    @When("^the search address api is called with zip code \"(.*?)\"$")
+    public void the_search_address_api_is_called_with_zip_code(String arg1) throws Throwable {
+        result = restTemplate.getForEntity("http://localhost:8080/api/addresses?zip-code=" + arg1, Address.class);
+    }
+
+    @Then("^\"(.*?)\" street with zip code \"(.*?)\" is returned$")
+    public void street_with_zip_code_is_returned(String street, String zipCode) throws Throwable {
+        Assert.assertTrue("street invalid", result.getBody().getStreet().equals(street));
+        Assert.assertTrue("zip code invalid", result.getBody().getZipCode().equals(zipCode));
+    }
+
     @Given("^Exists \"(.*?)\" zip codes, when I search for \"(.*?)\" zip code$")
     public void search_for_zip_code(String existingZipcodes, String searchZipcode) throws Throwable {
         setupData(existingZipcodes);
-        result = restTemplate.getForEntity("http://localhost:8080/api/addresses/?zip-code=" + searchZipcode, Address.class);
-    }
-
-    @Then("^zip code returned is \"(.*?)\"$")
-    public void zip_code_returned(String expect) throws Throwable {
-        Assert.assertTrue(result.getBody().getZipCode().equals(expect));
+        result = restTemplate.getForEntity("http://localhost:8080/api/addresses?zip-code=" + searchZipcode, Address.class);
     }
 
     private void setupData(String zipCodes) {
@@ -64,6 +77,18 @@ public class ZipCodeSearchSteps {
             address.setZipCode(zipCode);
             addressGateway.save(address);
         }
+    }
+
+    private void setupData(String zipCode, String street) {
+        Address address = new Address();
+        address.setZipCode(zipCode);
+        address.setStreet(street);
+        addressGateway.save(address);
+    }
+
+    @Then("^zip code returned is \"(.*?)\"$")
+    public void zip_code_returned(String expect) throws Throwable {
+        Assert.assertTrue(result.getBody().getZipCode().equals(expect));
     }
 
     @When("^the search address api is called with no zip code$")
@@ -78,13 +103,15 @@ public class ZipCodeSearchSteps {
 
     @When("^the api is called with zip code \"(.*?)\"$")
     public void the_api_is_called_with_zip_code(String arg1) throws Throwable {
-        resultError = restTemplate.getForEntity("http://localhost:8080/api/addresses/?zip-code=" + arg1, BusinessError.class);
+        ParameterizedTypeReference<Collection<ApiError>> typeRef = new ParameterizedTypeReference<Collection<ApiError>>() {
+        };
+        resultError = restTemplate.exchange("http://localhost:8080/api/addresses/?zip-code=" + arg1, HttpMethod.GET, null, typeRef);
     }
 
     @Then("^bad request '(\\d+)' with 'CEP invalido' message is returned$")
     public void bad_request_with_CEP_invalido_message_is_returned(int arg1) throws Throwable {
         Assert.assertTrue(resultError.getStatusCode() == HttpStatus.BAD_REQUEST);
-        Assert.assertTrue("zipCode.invalid".equals(resultError.getBody().getCode()));
+        Assert.assertTrue("zipCode.invalid" .equals(resultError.getBody().iterator().next().getCode()));
     }
 
 }

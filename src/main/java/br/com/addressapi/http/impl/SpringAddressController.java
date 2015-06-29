@@ -1,17 +1,15 @@
-package br.com.addressapi.http.spring;
+package br.com.addressapi.http.impl;
 
 import br.com.addressapi.entities.Address;
-import br.com.addressapi.entities.BusinessError;
+import br.com.addressapi.entities.ApiError;
 import br.com.addressapi.http.AddressController;
 import br.com.addressapi.usecases.ZipCodeSearch;
 import br.com.addressapi.usecases.exceptions.BusinessException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
+import java.util.Collection;
 
 /**
  * Created by gbroveri on 28/06/15.
@@ -24,16 +22,15 @@ public class SpringAddressController implements AddressController {
     private ZipCodeSearch zipCodeSearch;
 
     @Override
-    @RequestMapping
+    @RequestMapping(method = RequestMethod.GET)
     public Address findByZipCode(@RequestParam(value = "zip-code", required = true) String zipCode) throws BusinessException {
         return zipCodeSearch.findAddressByZipCode(zipCode);
     }
 
     @ExceptionHandler(BusinessException.class)
-    public BusinessError handleBusinessException(HttpServletResponse response, BusinessException ex) {
+    public Collection<ApiError> handleBusinessException(HttpServletResponse response, BusinessException ex) {
         response.setStatus(400);
-        BusinessError error = new BusinessError("CEP invalido", "zipCode.invalid");
-        return error;
+        return ex.getErrors();
     }
 
 }

@@ -1,12 +1,16 @@
-package br.com.addressapi.usecases.spring;
+package br.com.addressapi.usecases.impl;
 
 import br.com.addressapi.entities.Address;
+import br.com.addressapi.entities.ApiError;
 import br.com.addressapi.gateways.AddressGateway;
 import br.com.addressapi.usecases.ZipCodeSearch;
 import br.com.addressapi.usecases.exceptions.BusinessException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+
+import java.util.Arrays;
+import java.util.HashSet;
 
 /**
  * Created by gbroveri on 28/06/15.
@@ -41,7 +45,8 @@ public class SpringZipCodeSearch implements ZipCodeSearch {
     private void validateZipCode(final String zipCode) throws BusinessException {
         final String onlyDigits = zipCode.replaceAll("\\D", "");
         if (StringUtils.isEmpty(onlyDigits) || onlyDigits.length() != 8) {
-            throw new BusinessException();
+            final ApiError apiError = new ApiError("CPF invalido", "zipCode.invalid");
+            throw new BusinessException(new HashSet<>(Arrays.asList(apiError)));
         }
     }
 
