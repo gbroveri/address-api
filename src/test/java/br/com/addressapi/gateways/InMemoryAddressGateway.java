@@ -1,6 +1,7 @@
 package br.com.addressapi.gateways;
 
 import br.com.addressapi.entities.Address;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
@@ -9,6 +10,7 @@ import java.util.Collection;
  * Created by gbroveri on 28/06/15.
  */
 @Component
+@Profile("test")
 public class InMemoryAddressGateway extends GatewayUtilities<Address> implements AddressGateway {
 
     @Override
