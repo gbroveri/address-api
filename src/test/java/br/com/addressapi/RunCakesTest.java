@@ -11,6 +11,9 @@ import org.junit.runner.RunWith;
 @CucumberOptions(
         format = {"pretty", "html:target/cucumber"},
         glue = "br.com.addressapi.bdd",
-        features = "classpath:cucumber/find-address.feature")
+        features = {
+                "classpath:cucumber/zipcode-search.feature",
+                "classpath:cucumber/crud-address.feature"
+        })
 public class RunCakesTest {
 }

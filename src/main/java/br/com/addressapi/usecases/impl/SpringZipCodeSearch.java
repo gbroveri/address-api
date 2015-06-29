@@ -5,6 +5,7 @@ import br.com.addressapi.entities.ApiError;
 import br.com.addressapi.gateways.AddressGateway;
 import br.com.addressapi.usecases.ZipCodeSearch;
 import br.com.addressapi.usecases.exceptions.BusinessException;
+import br.com.addressapi.usecases.exceptions.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -22,7 +23,7 @@ public class SpringZipCodeSearch implements ZipCodeSearch {
     private AddressGateway addressGateway;
 
     @Override
-    public Address findAddressByZipCode(final String zipCode) throws BusinessException {
+    public Address findAddressByZipCode(final String zipCode) throws BusinessException, NotFoundException {
         String zipCodeDigits = zipCode.replaceAll("\\D", "");
         validateZipCode(zipCodeDigits);
         StringBuilder searchZipCode = new StringBuilder(zipCodeDigits);
@@ -39,6 +40,10 @@ public class SpringZipCodeSearch implements ZipCodeSearch {
                     }
                 }
             }
+        }
+        //if address is still null throw not found
+        if (address == null) {
+            throw new NotFoundException();
         }
         return address;
     }

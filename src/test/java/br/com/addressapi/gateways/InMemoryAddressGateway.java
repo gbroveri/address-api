@@ -25,4 +25,14 @@ public class InMemoryAddressGateway extends GatewayUtilities<Address> implements
     public Collection<Address> findAll() {
         return getEntities();
     }
+
+    @Override
+    public Address findById(String id) {
+        for (Address address : getEntities()) {
+            if (address.getId().equals(id)) {
+                return address;
+            }
+        }
+        return null;
+    }
 }

@@ -32,7 +32,7 @@ import java.util.Collection;
 @WebIntegrationTest
 public class ZipCodeSearchSteps {
 
-    RestTemplate restTemplate = new TestRestTemplate();
+    private RestTemplate restTemplate = new TestRestTemplate();
 
     private ResponseEntity<Address> result;
     private ResponseEntity<Collection<ApiError>> resultError;
@@ -105,7 +105,7 @@ public class ZipCodeSearchSteps {
 
     @Then("^bad request '400' is returned$")
     public void not_found_is_returned() throws Throwable {
-        Assert.assertTrue(result.getStatusCode() == HttpStatus.BAD_REQUEST);
+        Assert.assertTrue("invalid return status = " + result.getStatusCode(), result.getStatusCode() == HttpStatus.BAD_REQUEST);
     }
 
     @When("^the api is called with zip code \"(.*?)\"$")
@@ -118,7 +118,7 @@ public class ZipCodeSearchSteps {
     @Then("^bad request '(\\d+)' with 'CEP invalido' message is returned$")
     public void bad_request_with_CEP_invalido_message_is_returned(int arg1) throws Throwable {
         Assert.assertTrue(resultError.getStatusCode() == HttpStatus.BAD_REQUEST);
-        Assert.assertTrue("zipCode.invalid" .equals(resultError.getBody().iterator().next().getCode()));
+        Assert.assertTrue("zipCode.invalid".equals(resultError.getBody().iterator().next().getCode()));
     }
 
 }

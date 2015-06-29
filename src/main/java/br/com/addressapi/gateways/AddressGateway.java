@@ -16,4 +16,5 @@ public interface AddressGateway {
 
     Collection<Address> findAll();
 
+    Address findById(String id);
 }
