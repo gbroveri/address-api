@@ -23,8 +23,9 @@ public class SpringZipCodeSearch implements ZipCodeSearch {
 
     @Override
     public Address findAddressByZipCode(final String zipCode) throws BusinessException {
-        validateZipCode(zipCode);
-        StringBuilder searchZipCode = new StringBuilder(zipCode);
+        String zipCodeDigits = zipCode.replaceAll("\\D", "");
+        validateZipCode(zipCodeDigits);
+        StringBuilder searchZipCode = new StringBuilder(zipCodeDigits);
         Address address = null;
         address = addressGateway.findAddressByZipCode(searchZipCode.toString());
         if (address == null) {
@@ -42,9 +43,8 @@ public class SpringZipCodeSearch implements ZipCodeSearch {
         return address;
     }
 
-    private void validateZipCode(final String zipCode) throws BusinessException {
-        final String onlyDigits = zipCode.replaceAll("\\D", "");
-        if (StringUtils.isEmpty(onlyDigits) || onlyDigits.length() != 8) {
+    private void validateZipCode(final String zipCodeDigits) throws BusinessException {
+        if (StringUtils.isEmpty(zipCodeDigits) || zipCodeDigits.length() != 8) {
             final ApiError apiError = new ApiError("CPF invalido", "zipCode.invalid");
             throw new BusinessException(new HashSet<>(Arrays.asList(apiError)));
         }

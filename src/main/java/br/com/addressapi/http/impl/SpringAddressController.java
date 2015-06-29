@@ -23,8 +23,12 @@ public class SpringAddressController implements AddressController {
 
     @Override
     @RequestMapping(method = RequestMethod.GET)
-    public Address findByZipCode(@RequestParam(value = "zip-code", required = true) String zipCode) throws BusinessException {
-        return zipCodeSearch.findAddressByZipCode(zipCode);
+    public Address findByZipCode(@RequestParam(value = "zip-code", required = true) String zipCode, HttpServletResponse response) throws BusinessException {
+        final Address address = zipCodeSearch.findAddressByZipCode(zipCode);
+        if (address == null) {
+            response.setStatus(404);
+        }
+        return address;
     }
 
     @ExceptionHandler(BusinessException.class)

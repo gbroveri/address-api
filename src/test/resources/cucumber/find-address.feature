@@ -8,9 +8,14 @@ Feature: Find full address given zip code
     When the search address api is called with zip code "01504001"
     Then "Vergueiro St" street with zip code "01504001" is returned
 
-  Scenario: no zip code is passed in to the api
+  Scenario: no zip code is passed to the api
     When the search address api is called with no zip code
     Then bad request '400' is returned
+
+  Scenario: zip code does not exist
+    Given there is a valid "01504001" zip code for street "Vergueiro St"
+    When the search address api is called with zip code "99999999"
+    Then not found '404' is returned
 
   Scenario: zip code with literal is invalid
     When the api is called with zip code "AB999999"
@@ -23,6 +28,11 @@ Feature: Find full address given zip code
   Scenario: zip code with more than 8 digits is invalid
     When the api is called with zip code "999999999"
     Then bad request '400' with 'CEP invalido' message is returned
+
+  Scenario: special characters are striped out on search
+    Given there is a valid "01504001" zip code for street "Vergueiro St"
+    When the search address api is called with zip code "01.504-001"
+    Then "Vergueiro St" street with zip code "01504001" is returned
 
   Scenario Outline: resolve to more general zip code (replacing ending with 0)
     Given Exists <existing> zip codes, when I search for <search> zip code

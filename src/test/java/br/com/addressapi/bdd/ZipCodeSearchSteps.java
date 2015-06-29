@@ -1,4 +1,4 @@
-package br.com.addressapi.bdd.integration;
+package br.com.addressapi.bdd;
 
 import br.com.addressapi.Application;
 import br.com.addressapi.entities.Address;
@@ -60,9 +60,16 @@ public class ZipCodeSearchSteps {
 
     @Then("^\"(.*?)\" street with zip code \"(.*?)\" is returned$")
     public void street_with_zip_code_is_returned(String street, String zipCode) throws Throwable {
+        Assert.assertTrue("must return 200", result.getStatusCode() == HttpStatus.OK);
         Assert.assertTrue("street invalid", result.getBody().getStreet().equals(street));
         Assert.assertTrue("zip code invalid", result.getBody().getZipCode().equals(zipCode));
     }
+
+    @Then("^not found '(\\d+)' is returned$")
+    public void not_found_is_returned(int arg1) throws Throwable {
+        Assert.assertTrue("should return 404", result.getStatusCode() == HttpStatus.NOT_FOUND);
+    }
+
 
     @Given("^Exists \"(.*?)\" zip codes, when I search for \"(.*?)\" zip code$")
     public void search_for_zip_code(String existingZipcodes, String searchZipcode) throws Throwable {
