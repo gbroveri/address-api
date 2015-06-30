@@ -8,6 +8,7 @@ import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
 import org.junit.Assert;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.SpringApplicationContextLoader;
 import org.springframework.boot.test.TestRestTemplate;
 import org.springframework.boot.test.WebIntegrationTest;
@@ -28,7 +29,7 @@ import java.util.List;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = Application.class, loader = SpringApplicationContextLoader.class)
-@WebIntegrationTest
+@WebIntegrationTest("server.port=0")
 public class CrudAddressSteps {
 
     private RestTemplate restTemplate = new TestRestTemplate();
@@ -39,6 +40,19 @@ public class CrudAddressSteps {
     private ResponseEntity<Collection<ApiError>> resultError;
     private String newComplement;
 
+    @Value("${local.server.port}")
+    private int port;
+
+    /**
+     * Returns the base url for your rest interface
+     *
+     * @return
+     */
+    private String getApiUri() {
+        return "http://localhost:" + port + "/api/addresses";
+    }
+
+
     @Given("^a valid address$")
     public void a_valid_address(List<Address> addressList) throws Throwable {
         input = addressList;
@@ -47,7 +61,7 @@ public class CrudAddressSteps {
     @When("^api to create is called with address data$")
     public void api_to_create_is_called_with_address_data() throws Throwable {
         Address address = input.iterator().next();
-        result = restTemplate.postForEntity("http://localhost:8080/api/addresses", address, Address.class);
+        result = restTemplate.postForEntity(getApiUri(), address, Address.class);
     }
 
     @Then("^http status '200' is returned with newly created address$")
@@ -68,7 +82,7 @@ public class CrudAddressSteps {
         Address address = input.iterator().next();
         HttpEntity<Address> addressRequest = new HttpEntity<>(address);
         resultError = restTemplate.exchange(
-                "http://localhost:8080/api/addresses",
+                getApiUri(),
                 HttpMethod.POST,
                 addressRequest,
                 typeRef);
@@ -86,13 +100,13 @@ public class CrudAddressSteps {
     @Given("^exists address for a customer$")
     public void exists_address_for_a_customer(List<Address> addressList) throws Throwable {
         Address address = addressList.iterator().next();
-        result = restTemplate.postForEntity("http://localhost:8080/api/addresses", address, Address.class);
+        result = restTemplate.postForEntity(getApiUri(), address, Address.class);
         Assert.assertTrue(result.getStatusCode() == HttpStatus.OK);
     }
 
     @When("^api is queried to find address by id$")
     public void api_is_queried_to_find_address_by_id() throws Throwable {
-        resultQuery = restTemplate.getForEntity("http://localhost:8080/api/addresses/" + result.getBody().getId(), Address.class);
+        resultQuery = restTemplate.getForEntity(getApiUri() + "/" + result.getBody().getId(), Address.class);
     }
 
     @Then("^existing address is returned$")
@@ -109,7 +123,7 @@ public class CrudAddressSteps {
 
     @When("^api is queried to find address by id (\\d+)$")
     public void api_is_queried_to_find_address_by_id(int id) throws Throwable {
-        resultQuery = restTemplate.getForEntity("http://localhost:8080/api/addresses/" + id, Address.class);
+        resultQuery = restTemplate.getForEntity(getApiUri() + "/" + id, Address.class);
     }
 
     @Then("^not found (\\d+) is returned$")
@@ -129,7 +143,7 @@ public class CrudAddressSteps {
         };
         HttpEntity<Address> addressRequest = new HttpEntity<>(toUpdate);
         result = restTemplate.exchange(
-                "http://localhost:8080/api/addresses/" + toUpdate.getId(),
+                getApiUri() + "/" + toUpdate.getId(),
                 HttpMethod.PUT,
                 addressRequest,
                 typeRef);
@@ -150,7 +164,7 @@ public class CrudAddressSteps {
         };
         HttpEntity<Address> addressRequest = new HttpEntity<>(toUpdate);
         resultError = restTemplate.exchange(
-                "http://localhost:8080/api/addresses/" + toUpdate.getId(),
+                getApiUri() + "/" + toUpdate.getId(),
                 HttpMethod.PUT,
                 addressRequest,
                 typeRef);
@@ -162,7 +176,7 @@ public class CrudAddressSteps {
         };
         HttpEntity<Address> addressRequest = new HttpEntity<>(new Address());
         resultError = restTemplate.exchange(
-                "http://localhost:8080/api/addresses/" + arg1,
+                getApiUri() + "/" + arg1,
                 HttpMethod.PUT,
                 addressRequest,
                 typeRef);
@@ -179,7 +193,7 @@ public class CrudAddressSteps {
         Address toDelete = result.getBody();
 
         resultDelete = restTemplate.exchange(
-                "http://localhost:8080/api/addresses/" + toDelete.getId(),
+                getApiUri() + "/" + toDelete.getId(),
                 HttpMethod.DELETE, null, Object.class);
     }
 

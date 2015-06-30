@@ -11,6 +11,7 @@ import cucumber.api.java.en.When;
 import org.junit.Assert;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.SpringApplicationContextLoader;
 import org.springframework.boot.test.TestRestTemplate;
 import org.springframework.boot.test.WebIntegrationTest;
@@ -29,7 +30,7 @@ import java.util.Collection;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = Application.class, loader = SpringApplicationContextLoader.class)
-@WebIntegrationTest
+@WebIntegrationTest("server.port=0")
 public class ZipCodeSearchSteps {
 
     private RestTemplate restTemplate = new TestRestTemplate();
@@ -39,6 +40,18 @@ public class ZipCodeSearchSteps {
 
     @Autowired
     private AddressGateway addressGateway;
+
+    @Value("${local.server.port}")
+    private int port;
+
+    /**
+     * Returns the base url for your rest interface
+     *
+     * @return
+     */
+    private String getApiUri() {
+        return "http://localhost:" + port + "/api/addresses";
+    }
 
     @Before
     public void setup() {
@@ -55,7 +68,7 @@ public class ZipCodeSearchSteps {
 
     @When("^the search address api is called with zip code \"(.*?)\"$")
     public void the_search_address_api_is_called_with_zip_code(String arg1) throws Throwable {
-        result = restTemplate.getForEntity("http://localhost:8080/api/addresses?zip-code=" + arg1, Address.class);
+        result = restTemplate.getForEntity(getApiUri() + "?zip-code=" + arg1, Address.class);
     }
 
     @Then("^\"(.*?)\" street with zip code \"(.*?)\" is returned$")
@@ -74,7 +87,7 @@ public class ZipCodeSearchSteps {
     @Given("^Exists \"(.*?)\" zip codes, when I search for \"(.*?)\" zip code$")
     public void search_for_zip_code(String existingZipcodes, String searchZipcode) throws Throwable {
         setupData(existingZipcodes);
-        result = restTemplate.getForEntity("http://localhost:8080/api/addresses?zip-code=" + searchZipcode, Address.class);
+        result = restTemplate.getForEntity(getApiUri() + "?zip-code=" + searchZipcode, Address.class);
     }
 
     private void setupData(String zipCodes) {
@@ -100,7 +113,7 @@ public class ZipCodeSearchSteps {
 
     @When("^the search address api is called with no zip code$")
     public void the_search_address_api_is_called_with_no_zip_code() throws Throwable {
-        result = restTemplate.getForEntity("http://localhost:8080/api/addresses", Address.class);
+        result = restTemplate.getForEntity(getApiUri(), Address.class);
     }
 
     @Then("^bad request '400' is returned$")
@@ -112,7 +125,7 @@ public class ZipCodeSearchSteps {
     public void the_api_is_called_with_zip_code(String arg1) throws Throwable {
         ParameterizedTypeReference<Collection<ApiError>> typeRef = new ParameterizedTypeReference<Collection<ApiError>>() {
         };
-        resultError = restTemplate.exchange("http://localhost:8080/api/addresses/?zip-code=" + arg1, HttpMethod.GET, null, typeRef);
+        resultError = restTemplate.exchange(getApiUri() + "?zip-code=" + arg1, HttpMethod.GET, null, typeRef);
     }
 
     @Then("^bad request '(\\d+)' with 'CEP invalido' message is returned$")
